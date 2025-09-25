@@ -1,15 +1,31 @@
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell, User } from "lucide-react";
+import { Bell, Search, Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { GlobalSearchDialog } from "@/components/GlobalSearchDialog";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Global keyboard shortcut for search
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-surface">
@@ -31,6 +47,28 @@ export function Layout({ children }: LayoutProps) {
             </div>
 
             <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSearchOpen(true)}
+                className="hidden sm:flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <Search className="w-4 h-4" />
+                <span className="text-sm">Search</span>
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSearchOpen(true)}
+                className="sm:hidden"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+
               <Button variant="ghost" size="sm" className="relative">
                 <Bell className="w-4 h-4" />
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
@@ -56,6 +94,8 @@ export function Layout({ children }: LayoutProps) {
           </main>
         </div>
       </div>
+      
+      <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </SidebarProvider>
   );
 }
