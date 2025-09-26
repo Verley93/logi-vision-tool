@@ -14,14 +14,18 @@ import {
   Package,
   Truck,
   AlertTriangle,
-  Clock,
-  TrendingUp
+  Users,
+  Tags,
+  Shield,
+  CheckCircle
 } from 'lucide-react';
 
-const statusConfig = {
-  active: { label: 'Active', color: 'bg-success-light text-success' },
-  inactive: { label: 'Inactive', color: 'bg-muted text-muted-foreground' },
-  pending: { label: 'Pending', color: 'bg-warning-light text-warning' }
+const shipClassConfig = {
+  OP: { label: 'Over Packaging', color: 'bg-success-light text-success' },
+  OW: { label: 'Over Weight', color: 'bg-warning-light text-warning' },
+  SP: { label: 'Special Packaging', color: 'bg-info-light text-info' },
+  SW: { label: 'Special Weight', color: 'bg-destructive-light text-destructive' },
+  TH: { label: 'Threshold', color: 'bg-muted text-muted-foreground' }
 };
 
 export default function Products() {
@@ -65,7 +69,7 @@ export default function Products() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Products</h1>
           <p className="text-muted-foreground">
-            Manage {overview?.totalProducts ? formatNumber(overview.totalProducts) : '14M+'} products across your catalog
+            Manage {overview?.totalSKUs ? formatNumber(overview.totalSKUs) : '14M+'} SKUs across {overview?.totalStyles ? formatNumber(overview.totalStyles) : '2.8M+'} styles
           </p>
         </div>
         
@@ -100,9 +104,9 @@ export default function Products() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Products</p>
-                  <p className="text-2xl font-bold">{formatNumber(overview.totalProducts)}</p>
-                  <p className="text-xs text-muted-foreground">Across all categories</p>
+                  <p className="text-sm text-muted-foreground">Total SKUs</p>
+                  <p className="text-2xl font-bold">{formatNumber(overview.totalSKUs)}</p>
+                  <p className="text-xs text-muted-foreground">Individual products</p>
                 </div>
                 <Box className="h-8 w-8 text-muted-foreground" />
               </div>
@@ -112,9 +116,21 @@ export default function Products() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">PO Eligible</p>
-                  <p className="text-2xl font-bold text-success">{formatNumber(overview.shippingMetrics.eligibleForPO)}</p>
-                  <p className="text-xs text-muted-foreground">P.O. Box shipping</p>
+                  <p className="text-sm text-muted-foreground">Styles</p>
+                  <p className="text-2xl font-bold text-info">{formatNumber(overview.totalStyles)}</p>
+                  <p className="text-xs text-muted-foreground">Style groups</p>
+                </div>
+                <Tags className="h-8 w-8 text-info" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-card">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">ECodes</p>
+                  <p className="text-2xl font-bold text-success">{formatNumber(overview.totalECodes)}</p>
+                  <p className="text-xs text-muted-foreground">Electronic codes</p>
                 </div>
                 <Package className="h-8 w-8 text-success" />
               </div>
@@ -124,23 +140,11 @@ export default function Products() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">APO/FPO Eligible</p>
-                  <p className="text-2xl font-bold text-info">{formatNumber(overview.shippingMetrics.eligibleForAPO)}</p>
-                  <p className="text-xs text-muted-foreground">Military addresses</p>
+                  <p className="text-sm text-muted-foreground">Active Vendors</p>
+                  <p className="text-2xl font-bold text-warning">{overview.vendors.length}</p>
+                  <p className="text-xs text-muted-foreground">Supplier partners</p>
                 </div>
-                <Truck className="h-8 w-8 text-info" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-card">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Restricted Items</p>
-                  <p className="text-2xl font-bold text-warning">{formatNumber(overview.shippingMetrics.restrictedItems)}</p>
-                  <p className="text-xs text-muted-foreground">Shipping restrictions</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-warning" />
+                <Users className="h-8 w-8 text-warning" />
               </div>
             </CardContent>
           </Card>
@@ -170,108 +174,225 @@ export default function Products() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Categories Breakdown */}
-        <div className="lg:col-span-2">
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Product Categories
-              </CardTitle>
-              <CardDescription>
-                Distribution of products across different categories
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="flex justify-between">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                    <Skeleton className="h-2 w-full" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Ship Classes Breakdown */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Ship Classes
+            </CardTitle>
+            <CardDescription>
+              Distribution of products by shipping classification
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-16" />
                   </div>
-                ))
-              ) : overview ? (
-                overview.categories.map((category) => (
-                  <div key={category.name} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{category.name}</span>
-                      <span className="text-muted-foreground">
-                        {formatNumber(category.count)} ({category.percentage}%)
-                      </span>
+                  <Skeleton className="h-2 w-full" />
+                </div>
+              ))
+            ) : overview ? (
+              overview.shipClasses.map((shipClass) => (
+                <div key={shipClass.class} className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={shipClassConfig[shipClass.class].color}>
+                        {shipClass.class}
+                      </Badge>
+                      <span className="font-medium">{shipClassConfig[shipClass.class].label}</span>
                     </div>
-                    <Progress value={category.percentage} className="h-2" />
+                    <span className="text-muted-foreground">
+                      {formatNumber(shipClass.count)} ({shipClass.percentage}%)
+                    </span>
                   </div>
-                ))
-              ) : null}
-            </CardContent>
-          </Card>
-        </div>
+                  <Progress value={shipClass.percentage} className="h-2" />
+                </div>
+              ))
+            ) : null}
+          </CardContent>
+        </Card>
 
-        {/* Recently Updated Products */}
-        <div>
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Recent Updates
-              </CardTitle>
-              <CardDescription>
-                Products modified in the last week
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="space-y-2 pb-4 border-b last:border-0">
-                    <Skeleton className="h-4 w-full" />
-                    <div className="flex justify-between">
-                      <Skeleton className="h-3 w-16" />
-                      <Skeleton className="h-3 w-12" />
+        {/* Vendors */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Top Vendors
+            </CardTitle>
+            <CardDescription>
+              Leading suppliers by SKU count
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="space-y-2 pb-4 border-b last:border-0">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              ))
+            ) : overview ? (
+              overview.vendors.map((vendor) => (
+                <div key={vendor.id} className="space-y-2 pb-4 border-b last:border-0">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate">{vendor.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-muted-foreground">ID: {vendor.id}</p>
+                        {vendor.directVendor && (
+                          <Badge variant="outline" className="text-xs">Direct</Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{formatNumber(vendor.skuCount)}</p>
+                      <p className="text-xs text-muted-foreground">SKUs</p>
                     </div>
                   </div>
-                ))
-              ) : overview ? (
-                overview.recentlyUpdated.slice(0, 5).map((product) => (
-                  <div key={product.id} className="space-y-2 pb-4 border-b last:border-0">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{product.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{product.sku}</p>
-                      </div>
-                      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 ${statusConfig[product.status].color}`}>
-                        {statusConfig[product.status].label}
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Updated {formatDateTime(product.lastUpdated)}
-                    </p>
-                  </div>
-                ))
-              ) : null}
-            </CardContent>
-          </Card>
-        </div>
+                </div>
+              ))
+            ) : null}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Coming Soon Notice */}
+      {/* Restrictions and Eligibility */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Restrictions */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Shipping Restrictions
+            </CardTitle>
+            <CardDescription>
+              Active restriction codes and affected styles
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-2 pb-4 border-b last:border-0">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <Skeleton className="h-3 w-full" />
+                </div>
+              ))
+            ) : overview ? (
+              overview.restrictions.map((restriction) => (
+                <div key={restriction.code} className="space-y-2 pb-4 border-b last:border-0">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">{restriction.code}</Badge>
+                        <span className="font-medium text-sm">{restriction.category}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {restriction.states.map((state) => (
+                          <Badge key={state} variant="secondary" className="text-xs">
+                            {state}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-right ml-2">
+                      <p className="text-sm font-medium">{formatNumber(restriction.affectedStyles)}</p>
+                      <p className="text-xs text-muted-foreground">styles</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : null}
+          </CardContent>
+        </Card>
+
+        {/* Eligibility Metrics */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Eligibility Metrics
+            </CardTitle>
+            <CardDescription>
+              Product eligibility for various services
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))
+            ) : overview ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">GTGT Eligible</span>
+                  <span className="font-medium">{formatNumber(overview.eligibilityMetrics.gtgt)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Expedite</span>
+                  <span className="font-medium">{formatNumber(overview.eligibilityMetrics.expedite)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">P.O. Box</span>
+                  <span className="font-medium">{formatNumber(overview.eligibilityMetrics.po)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">APO/FPO</span>
+                  <span className="font-medium">{formatNumber(overview.eligibilityMetrics.apoFpo)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Hazmat</span>
+                  <span className="font-medium text-warning">{formatNumber(overview.eligibilityMetrics.hazmat)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Baggable</span>
+                  <span className="font-medium">{formatNumber(overview.eligibilityMetrics.baggable)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">SFS Eligible</span>
+                  <span className="font-medium">{formatNumber(overview.eligibilityMetrics.sfs)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">DoorDash</span>
+                  <span className="font-medium">{formatNumber(overview.eligibilityMetrics.doordash)}</span>
+                </div>
+              </>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Product Management Tools */}
       <Card className="shadow-card border-info-light bg-info-light/20">
         <CardContent className="p-6 text-center">
           <Box className="h-12 w-12 text-info mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">Product Management Tools</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Advanced Product Management</h3>
           <p className="text-muted-foreground mb-4">
-            Advanced product management features including bulk editing, attribute overrides, 
-            and detailed shipping configuration are currently in development.
+            Manage product attributes, weight/dimensions, ship classes, restrictions, and vendor relationships.
+            Override shipping eligibility and configure detailed product specifications.
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            <Badge variant="outline">Bulk Edit</Badge>
+            <Badge variant="outline">SKU Management</Badge>
+            <Badge variant="outline">Style Groups</Badge>
             <Badge variant="outline">Attribute Override</Badge>
-            <Badge variant="outline">Shipping Config</Badge>
             <Badge variant="outline">Weight & Dimensions</Badge>
-            <Badge variant="outline">Ship Classes</Badge>
+            <Badge variant="outline">Ship Class Config</Badge>
+            <Badge variant="outline">Restriction Codes</Badge>
+            <Badge variant="outline">Vendor Relations</Badge>
           </div>
         </CardContent>
       </Card>
